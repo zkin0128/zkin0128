@@ -154,32 +154,33 @@
       ctx.lineWidth = 2;
       ctx.stroke();
 
-     c.onmousemove = function(e) {
-  const rect = c.getBoundingClientRect();
-  const mouseX = e.clientX - rect.left;
-  const mouseY = e.clientY - rect.top;
-  const tooltip = document.getElementById("tooltip");
-  let found = false;
+      c.onmousemove = function(e) {
+        const rect = c.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const tooltip = document.getElementById("tooltip");
+        let found = false;
 
-  for (const p of points) {
-    const dx = mouseX - p.x;
-    const dy = mouseY - p.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+        for (const p of points) {
+          const dx = mouseX - p.x;
+          const dy = mouseY - p.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance < 10) {
-      tooltip.style.left = `${e.pageX + 12}px`;
-      tooltip.style.top = `${e.pageY - 32}px`;
-      tooltip.innerHTML = `${p.label}<br><strong>NT$ ${p.value.toLocaleString()}</strong>`;
-      tooltip.classList.add("show");
-      found = true;
-      break;
+          if (distance < 10) {
+            tooltip.style.left = `${e.pageX + 12}px`;
+            tooltip.style.top = `${e.pageY - 32}px`;
+            tooltip.innerHTML = `${p.label}<br><strong>NT$ ${p.value.toLocaleString()}</strong>`;
+            tooltip.classList.add("show");
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          tooltip.classList.remove("show");
+        }
+      };
     }
-  }
-
-  if (!found) {
-    tooltip.classList.remove("show");
-  }
-};
 
     function openYahoo() {
       const code = document.getElementById("stockCode").value.trim();
@@ -187,7 +188,7 @@
         alert("請輸入股票代碼！");
         return;
       }
-      const url = `https://tw.stock.yahoo.com/quote/${code}.TW`;
+           const url = `https://tw.stock.yahoo.com/quote/${code}.TW`;
       window.open(url, "_blank");
     }
 
@@ -199,7 +200,7 @@
     function downloadChart() {
       const canvas = document.getElementById("chart");
       const link = document.createElement("a");
-         link.download = "etf_chart.png";
+      link.download = "etf_chart.png";
       link.href = canvas.toDataURL("image/png");
       link.click();
     }
