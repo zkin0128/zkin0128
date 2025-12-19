@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ETF 定期定額複利試算｜理財工具</title>
+  <title>ETF 定期定額複利試算｜津丞科技理財工具</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body onload="calculate()">
   <nav class="navbar">
-    <div class="nav-logo">🌿理財工具</div>
+    <div class="nav-logo">🌿津丞科技 理財工具</div>
     <div class="nav-links">
       <a href="#calculator">試算</a>
       <a href="#stock">股票資訊</a>
+      <a href="#download">下載圖表</a>
+      <a href="#" onclick="toggleDarkMode()">🌓</a>
     </div>
   </nav>
 
   <div class="container" id="calculator">
     <h1>ETF 定期定額複利試算</h1>
-    <p class="subtitle">用數據看見你的財富未來 🌱</p>
+    <p class="subtitle">津丞科技用數據看見你的財富未來 🌱</p>
 
     <label>每月投入金額（NTD）</label>
     <input id="monthly" type="number" value="10000">
@@ -36,12 +38,21 @@
     <div class="result" id="result"></div>
   </div>
 
-  <section class="stock-embed" id="stock">
+  <section class="stock-link" id="stock">
     <h2>快速查看股票資訊</h2>
     <label>輸入股票代碼（例如：2330）</label>
     <input type="text" id="stockCode" placeholder="請輸入台股代碼">
-    <button onclick="embedYahoo()">顯示股票資訊</button>
-    <div id="iframeContainer" class="iframe-container"></div>
+    <button onclick="openYahoo()">前往 Yahoo 股市</button>
+    <div class="hot-stocks">
+      <button onclick="quickStock('0050')">0050</button>
+      <button onclick="quickStock('2330')">2330</button>
+      <button onclick="quickStock('00878')">00878</button>
+    </div>
+  </section>
+
+  <section class="download" id="download">
+    <h2>下載圖表</h2>
+    <button onclick="downloadChart()">📥 下載圖表為圖片</button>
   </section>
 
   <footer>本試算僅為數學模擬，非投資建議</footer>
@@ -113,7 +124,6 @@
         ctx.fillText((i + 1) + "年", x - 10, y + 20);
       }
 
-      // 資產成長
       ctx.beginPath();
       valueData.forEach((v, i) => {
         const x = padding + (i / (valueData.length - 1)) * (c.width - padding * 2);
@@ -129,7 +139,6 @@
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // 總投入
       ctx.beginPath();
       investedData.forEach((v, i) => {
         const x = padding + (i / (investedData.length - 1)) * (c.width - padding * 2);
@@ -164,16 +173,31 @@
       };
     }
 
-    function embedYahoo() {
+    function openYahoo() {
       const code = document.getElementById("stockCode").value.trim();
       if (!code) {
         alert("請輸入股票代碼！");
         return;
       }
       const url = `https://tw.stock.yahoo.com/quote/${code}.TW`;
-      document.getElementById("iframeContainer").innerHTML = `
-        <iframe src="${url}" width="100%" height="100%" style="border:0;" loading="lazy"></iframe>
-      `;
+      window.open(url, "_blank");
+    }
+
+    function quickStock(code) {
+      document.getElementById("stockCode").value = code;
+      openYahoo();
+    }
+
+    function downloadChart() {
+      const canvas = document.getElementById("chart");
+      const link = document.createElement("a");
+         link.download = "etf_chart.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
     }
   </script>
 </body>
