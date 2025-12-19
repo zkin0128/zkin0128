@@ -3,17 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ETF 定期定額複利試算｜每月投資報酬計算機</title>
+  <title>ETF 定期定額複利試算｜理財工具</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 </head>
 <body onload="calculate()">
   <nav class="navbar">
-    <div class="nav-logo">🌿 ETF 試算工具</div>
+    <div class="nav-logo">🌿理財工具</div>
     <div class="nav-links">
       <a href="#calculator">試算</a>
-      <a href="#about">關於</a>
-      <a href="#share">分享</a>
+      <a href="#stock">股票資訊</a>
     </div>
   </nav>
 
@@ -38,15 +36,12 @@
     <div class="result" id="result"></div>
   </div>
 
-  <section class="about" id="about">
-    <h2>關於這個工具</h2>
-    <p>這是一個簡單的 ETF 定期定額試算工具，幫助你模擬每月固定投資在 ETF 的資產成長情況。輸入每月投入金額、預期年化報酬率與投資年數，即可快速看到資產成長與總投入的比較圖表。</p>
-  </section>
-
-  <section class="share" id="share">
-    <h2>分享這個工具</h2>
-    <button onclick="copyLink()">📋 複製網站連結</button>
-    <p id="copyMsg" class="copy-msg"></p>
+  <section class="stock-embed" id="stock">
+    <h2>快速查看股票資訊</h2>
+    <label>輸入股票代碼（例如：2330）</label>
+    <input type="text" id="stockCode" placeholder="請輸入台股代碼">
+    <button onclick="embedYahoo()">顯示股票資訊</button>
+    <div id="iframeContainer" class="iframe-container"></div>
   </section>
 
   <footer>本試算僅為數學模擬，非投資建議</footer>
@@ -150,7 +145,6 @@
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Tooltip
       c.onmousemove = function(e) {
         const rect = c.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
@@ -170,10 +164,16 @@
       };
     }
 
-    function copyLink() {
-      navigator.clipboard.writeText(window.location.href);
-      document.getElementById("copyMsg").innerText = "✅ 已複製連結！";
-      setTimeout(() => document.getElementById("copyMsg").innerText = "", 2000);
+    function embedYahoo() {
+      const code = document.getElementById("stockCode").value.trim();
+      if (!code) {
+        alert("請輸入股票代碼！");
+        return;
+      }
+      const url = `https://tw.stock.yahoo.com/quote/${code}.TW`;
+      document.getElementById("iframeContainer").innerHTML = `
+        <iframe src="${url}" width="100%" height="100%" style="border:0;" loading="lazy"></iframe>
+      `;
     }
   </script>
 </body>
