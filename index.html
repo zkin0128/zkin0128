@@ -44,10 +44,17 @@
 
   <script>
     function calculate() {
-      const monthly = Number(document.getElementById('monthly').value);
-      const rate = Number(document.getElementById('rate').value) / 100 / 12;
-      const years = Number(document.getElementById('years').value);
-      const months = years * 12;
+  const monthly = Number(document.getElementById('monthly').value);
+  const rate = Number(document.getElementById('rate').value) / 100 / 12;
+  const years = Number(document.getElementById('years').value);
+
+  if (years <= 0) {
+    alert('投資年數需大於 0');
+    return;
+  }
+
+  const months = years * 12;
+
 
       let value = 0;
       const yearly = [];
