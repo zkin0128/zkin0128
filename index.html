@@ -5,10 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ETF 定期定額複利試算｜每月投資報酬計算機</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 </head>
 <body onload="calculate()">
-  <div class="container">
+  <nav class="navbar">
+    <div class="nav-logo">🌿 ETF 試算工具</div>
+    <div class="nav-links">
+      <a href="#calculator">試算</a>
+      <a href="#about">關於</a>
+      <a href="#share">分享</a>
+    </div>
+  </nav>
+
+  <div class="container" id="calculator">
     <h1>ETF 定期定額複利試算</h1>
+    <p class="subtitle">用數據看見你的財富未來 🌱</p>
 
     <label>每月投入金額（NTD）</label>
     <input id="monthly" type="number" value="10000">
@@ -25,9 +36,20 @@
     <div id="tooltip" class="tooltip"></div>
 
     <div class="result" id="result"></div>
-
-    <footer>※ 本試算僅為數學模擬，非投資建議</footer>
   </div>
+
+  <section class="about" id="about">
+    <h2>關於這個工具</h2>
+    <p>這是一個簡單的 ETF 定期定額試算工具，幫助你模擬每月固定投資在 ETF 的資產成長情況。輸入每月投入金額、預期年化報酬率與投資年數，即可快速看到資產成長與總投入的比較圖表。</p>
+  </section>
+
+  <section class="share" id="share">
+    <h2>分享這個工具</h2>
+    <button onclick="copyLink()">📋 複製網站連結</button>
+    <p id="copyMsg" class="copy-msg"></p>
+  </section>
+
+  <footer>由凱丞製作｜本試算僅為數學模擬，非投資建議</footer>
 
   <script>
     let points = [];
@@ -36,16 +58,11 @@
       const monthly = Number(document.getElementById('monthly').value);
       const rate = Number(document.getElementById('rate').value) / 100 / 12;
       const years = Number(document.getElementById('years').value);
-
-      if (years <= 0) {
-        alert('投資年數需大於 0');
-        return;
-      }
+      if (years <= 0) return alert('投資年數需大於 0');
 
       const months = years * 12;
       let value = 0;
-      const yearlyValue = [];
-      const yearlyInvested = [];
+      const yearlyValue = [], yearlyInvested = [];
 
       for (let i = 1; i <= months; i++) {
         value = (value + monthly) * (1 + rate);
@@ -56,13 +73,11 @@
       }
 
       const invested = monthly * months;
-
       document.getElementById('result').innerHTML = `
         <p><strong>總投入：</strong> NT$ ${invested.toLocaleString()}</p>
         <p><strong>最終資產：</strong> NT$ ${Math.round(value).toLocaleString()}</p>
-        <p><strong>投資收益：</strong> NT$ ${Math.round(value - invested).toLocaleString()}</p>
+        <p><strong>投資收益：</strong> NT$ ${(value - invested).toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
       `;
-
       drawChart(yearlyValue, yearlyInvested);
     }
 
@@ -75,7 +90,6 @@
       const max = Math.max(...valueData, ...investedData);
       const padding = 50;
 
-      // 座標軸與刻度
       ctx.strokeStyle = "#94a3b8";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -86,10 +100,9 @@
 
       ctx.fillStyle = "#475569";
       ctx.font = "12px Arial";
-      const steps = 5;
-      for (let i = 0; i <= steps; i++) {
-        const value = Math.round(max * i / steps);
-        const y = c.height - padding - (i / steps) * (c.height - padding * 2);
+      for (let i = 0; i <= 5; i++) {
+        const value = Math.round(max * i / 5);
+        const y = c.height - padding - (i / 5) * (c.height - padding * 2);
         ctx.fillText("NT$ " + value.toLocaleString(), 5, y + 4);
         ctx.beginPath();
         ctx.moveTo(padding - 5, y);
@@ -105,50 +118,39 @@
         ctx.fillText((i + 1) + "年", x - 10, y + 20);
       }
 
-      // 資產成長折線
+      // 資產成長
       ctx.beginPath();
       valueData.forEach((v, i) => {
         const x = padding + (i / (valueData.length - 1)) * (c.width - padding * 2);
         const y = c.height - padding - (v / max) * (c.height - padding * 2);
         i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        ctx.fillStyle = "#2563eb";
+        ctx.fillStyle = "#38a169";
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, Math.PI * 2);
         ctx.fill();
         points.push({x, y, value: v, label: (i+1)+"年 資產"});
       });
-      ctx.strokeStyle = "#2563eb";
+      ctx.strokeStyle = "#38a169";
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // 總投入折線
+      // 總投入
       ctx.beginPath();
       investedData.forEach((v, i) => {
         const x = padding + (i / (investedData.length - 1)) * (c.width - padding * 2);
         const y = c.height - padding - (v / max) * (c.height - padding * 2);
         i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        ctx.fillStyle = "#f97316";
+        ctx.fillStyle = "#b7791f";
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, Math.PI * 2);
         ctx.fill();
         points.push({x, y, value: v, label: (i+1)+"年 投入"});
       });
-      ctx.strokeStyle = "#f97316";
+      ctx.strokeStyle = "#b7791f";
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // 圖例
-      ctx.fillStyle = "#2563eb";
-      ctx.fillRect(c.width - 120, padding, 12, 12);
-      ctx.fillStyle = "#000";
-      ctx.fillText("資產成長", c.width - 100, padding + 10);
-
-      ctx.fillStyle = "#f97316";
-      ctx.fillRect(c.width - 120, padding + 20, 12, 12);
-      ctx.fillStyle = "#000";
-      ctx.fillText("總投入", c.width - 100, padding + 30);
-
-      // Tooltip 互動
+      // Tooltip
       c.onmousemove = function(e) {
         const rect = c.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
@@ -164,10 +166,14 @@
             found = true;
           }
         });
-        if (!found) {
-          tooltip.style.display = "none";
-        }
+        if (!found) tooltip.style.display = "none";
       };
+    }
+
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href);
+      document.getElementById("copyMsg").innerText = "✅ 已複製連結！";
+      setTimeout(() => document.getElementById("copyMsg").innerText = "", 2000);
     }
   </script>
 </body>
