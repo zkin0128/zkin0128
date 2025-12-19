@@ -1,25 +1,4 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ETF 定期定額複利試算</title>
-<style>
-body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#f5f7fa; }
-.container { max-width: 720px; margin: 40px auto; background:#fff; padding:24px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,.08); }
-h1 { font-size: 24px; margin-bottom: 16px; }
-label { display:block; margin-top:12px; font-weight:600; }
-input { width:100%; padding:10px; margin-top:6px; border-radius:8px; border:1px solid #ccc; }
-button { margin-top:20px; padding:12px; width:100%; border:none; border-radius:10px; background:#2563eb; color:#fff; font-size:16px; cursor:pointer; }
-button:hover { background:#1d4ed8; }
-.result { margin-top:24px; background:#f1f5f9; padding:16px; border-radius:10px; }
-.result p { margin:8px 0; }
-footer { margin-top:32px; text-align:center; font-size:12px; color:#64748b; }
-</style>
-</head>
-<body>
-<div class="container">
-<h1>ETF 定期定額複利試算</h1>
 
 
 <label>每月投入金額（NTD）</label>
@@ -37,6 +16,7 @@ footer { margin-top:32px; text-align:center; font-size:12px; color:#64748b; }
 <button onclick="calculate()">開始試算</button>
 
 
+<canvas id="chart" height="200" style="margin-top:20px;"></canvas>
 <div class="result" id="result"></div>
 
 
@@ -55,8 +35,50 @@ const months = years * 12;
 
 
 let futureValue = 0;
+const data = [];
 for (let i = 0; i < months; i++) {
 futureValue = (futureValue + monthly) * (1 + rate);
+if ((i + 1) % 12 === 0) {
+data.push(Math.round(futureValue));
+}
+}
+
+
+const totalInvested = monthly * months;
+
+
+document.getElementById('result').innerHTML = `
+<p><strong>總投入金額：</strong> NT$ ${totalInvested.toLocaleString()}</p>
+<p><strong>最終資產預估：</strong> NT$ ${Math.round(futureValue).toLocaleString()}</p>
+<p><strong>投資收益：</strong> NT$ ${Math.round(futureValue - totalInvested).toLocaleString()}</p>
+`;
+
+
+drawChart(data);
+}
+
+
+function drawChart(data) {
+const canvas = document.getElementById('chart');
+const ctx = canvas.getContext('2d');
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+
+const max = Math.max(...data);
+const padding = 30;
+const w = canvas.width - padding * 2;
+const h = canvas.height - padding * 2;
+
+
+ctx.beginPath();
+data.forEach((value, index) => {
+const x = padding + (w / (data.length - 1)) * index;
+const y = padding + h - (value / max) * h;
+index === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+});
+ctx.strokeStyle = '#2563eb';
+ctx.lineWidth = 2;
+ctx.stroke();
 }
 
 
