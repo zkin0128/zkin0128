@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ETF 定期定額複利試算｜每月投資報酬計算機</title>
   <link rel="stylesheet" href="style.css">
-  <meta name="description"
-        content="免費 ETF 定期定額複利試算工具，快速計算每月投資金額、年化報酬率與長期資產成長，適合新手與長期投資者使用。">
-  <meta name="keywords"
-        content="ETF 定期定額, 複利試算, 投資試算, 每月投資">
 </head>
 <body onload="calculate()">
   <div class="container">
@@ -25,7 +21,8 @@
 
     <button onclick="calculate()">開始試算</button>
 
-    <canvas id="chart" width="600" height="200"></canvas>
+    <!-- 圖表區塊 -->
+    <canvas id="chart" width="600" height="300"></canvas>
 
     <div class="result" id="result"></div>
 
@@ -69,17 +66,46 @@
       ctx.clearRect(0, 0, c.width, c.height);
 
       const max = Math.max(...data);
-      const padding = 30;
+      const padding = 40;
 
+      // 畫座標軸
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, c.height - padding);
+      ctx.lineTo(c.width - padding, c.height - padding);
+      ctx.stroke();
+
+      // 畫折線 + 圓點
       ctx.beginPath();
       data.forEach((v, i) => {
         const x = padding + (i / (data.length - 1)) * (c.width - padding * 2);
         const y = c.height - padding - (v / max) * (c.height - padding * 2);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+        // 畫圓點
+        ctx.fillStyle = "#2563eb";
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
       });
-      ctx.strokeStyle = '#2563eb';
+      ctx.strokeStyle = "#2563eb";
       ctx.lineWidth = 2;
       ctx.stroke();
+
+      // 漸層填充區域
+      const gradient = ctx.createLinearGradient(0, padding, 0, c.height - padding);
+      gradient.addColorStop(0, "rgba(37,99,235,0.3)");
+      gradient.addColorStop(1, "rgba(37,99,235,0)");
+      ctx.fillStyle = gradient;
+      ctx.lineTo(c.width - padding, c.height - padding);
+      ctx.lineTo(padding, c.height - padding);
+      ctx.closePath();
+      ctx.fill();
     }
   </script>
 </body>
