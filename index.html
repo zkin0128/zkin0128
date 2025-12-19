@@ -21,9 +21,7 @@
 
     <button onclick="calculate()">開始試算</button>
 
-    <!-- 圖表區塊 -->
     <canvas id="chart" width="600" height="300"></canvas>
-    <!-- tooltip -->
     <div id="tooltip" class="tooltip"></div>
 
     <div class="result" id="result"></div>
@@ -32,7 +30,7 @@
   </div>
 
   <script>
-    let points = []; // 儲存折線上的點位置與數值
+    let points = [];
 
     function calculate() {
       const monthly = Number(document.getElementById('monthly').value);
@@ -72,12 +70,12 @@
       const c = document.getElementById('chart');
       const ctx = c.getContext('2d');
       ctx.clearRect(0, 0, c.width, c.height);
-      points = []; // 清空舊點
+      points = [];
 
       const max = Math.max(...valueData, ...investedData);
       const padding = 50;
 
-      // 畫座標軸
+      // 座標軸與刻度
       ctx.strokeStyle = "#94a3b8";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -86,7 +84,6 @@
       ctx.lineTo(c.width - padding, c.height - padding);
       ctx.stroke();
 
-      // Y 軸刻度
       ctx.fillStyle = "#475569";
       ctx.font = "12px Arial";
       const steps = 5;
@@ -101,7 +98,6 @@
         ctx.stroke();
       }
 
-      // X 軸刻度
       const years = valueData.length;
       for (let i = 0; i < years; i++) {
         const x = padding + (i / (years - 1)) * (c.width - padding * 2);
@@ -109,7 +105,7 @@
         ctx.fillText((i + 1) + "年", x - 10, y + 20);
       }
 
-      // 畫資產成長折線
+      // 資產成長折線
       ctx.beginPath();
       valueData.forEach((v, i) => {
         const x = padding + (i / (valueData.length - 1)) * (c.width - padding * 2);
@@ -125,7 +121,7 @@
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // 畫投入金額折線
+      // 總投入折線
       ctx.beginPath();
       investedData.forEach((v, i) => {
         const x = padding + (i / (investedData.length - 1)) * (c.width - padding * 2);
@@ -152,7 +148,7 @@
       ctx.fillStyle = "#000";
       ctx.fillText("總投入", c.width - 100, padding + 30);
 
-      // 滑鼠事件
+      // Tooltip 互動
       c.onmousemove = function(e) {
         const rect = c.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
