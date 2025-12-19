@@ -132,16 +132,29 @@ footer {
 
 .tooltip {
   position: absolute;
-  background: #38a169;
+  background: rgba(0, 0, 0, 0.85);
   color: #fff;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
   display: none;
   pointer-events: none;
   white-space: nowrap;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   z-index: 999;
+  transition: opacity 0.2s ease;
+  opacity: 0;
+}
+
+.tooltip.show {
+  display: block;
+  opacity: 1;
+}
+
+.dark-mode .tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a202c;
+  box-shadow: 0 4px 12px rgba(255,255,255,0.2);
 }
 
 .stock-link, .download {
