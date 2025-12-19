@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ETF 定期定額複利試算｜訊丞科技理財工具</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body onload="calculate()">
   <nav class="navbar">
@@ -32,9 +33,7 @@
 
     <button onclick="calculate()">開始試算</button>
 
-    <canvas id="chart" width="600" height="300"></canvas>
-    <div id="tooltip" class="tooltip"></div>
-
+    <canvas id="chart" height="300"></canvas>
     <div class="result" id="result"></div>
   </div>
 
@@ -58,7 +57,7 @@
   <footer>本試算僅為數學模擬，非投資建議</footer>
 
   <script>
-    let points = [];
+    let chart;
 
     function calculate() {
       const monthly = Number(document.getElementById('monthly').value);
@@ -68,13 +67,14 @@
 
       const months = years * 12;
       let value = 0;
-      const yearlyValue = [], yearlyInvested = [];
+      const yearlyValue = [], yearlyInvested = [], labels = [];
 
       for (let i = 1; i <= months; i++) {
         value = (value + monthly) * (1 + rate);
         if (i % 12 === 0) {
           yearlyValue.push(Math.round(value));
           yearlyInvested.push(monthly * i);
+          labels.push((i / 12) + "年");
         }
       }
 
@@ -84,102 +84,80 @@
         <p><strong>最終資產：</strong> NT$ ${Math.round(value).toLocaleString()}</p>
         <p><strong>投資收益：</strong> NT$ ${(value - invested).toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
       `;
-      drawChart(yearlyValue, yearlyInvested);
+
+      drawChart(labels, yearlyValue, yearlyInvested);
     }
 
-    function drawChart(valueData, investedData) {
-      const c = document.getElementById('chart');
-      const ctx = c.getContext('2d');
-      ctx.clearRect(0, 0, c.width, c.height);
-      points = [];
+    function drawChart(labels, valueData, investedData) {
+      const ctx = document.getElementById('chart').getContext('2d');
 
-      const max = Math.max(...valueData, ...investedData);
-      const padding = 50;
+      if (chart) chart.destroy();
 
-      ctx.strokeStyle = "#94a3b8";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(padding, padding);
-      ctx.lineTo(padding, c.height - padding);
-      ctx.lineTo(c.width - padding, c.height - padding);
-      ctx.stroke();
-
-      ctx.fillStyle = "#475569";
-      ctx.font = "12px Arial";
-      for (let i = 0; i <= 5; i++) {
-        const value = Math.round(max * i / 5);
-        const y = c.height - padding - (i / 5) * (c.height - padding * 2);
-        ctx.fillText("NT$ " + value.toLocaleString(), 5, y + 4);
-        ctx.beginPath();
-        ctx.moveTo(padding - 5, y);
-        ctx.lineTo(c.width - padding, y);
-        ctx.strokeStyle = "#e2e8f0";
-        ctx.stroke();
-      }
-
-      const years = valueData.length;
-      for (let i = 0; i < years; i++) {
-        const x = padding + (i / (years - 1)) * (c.width - padding * 2);
-        const y = c.height - padding;
-        ctx.fillText((i + 1) + "年", x - 10, y + 20);
-      }
-
-      ctx.beginPath();
-      valueData.forEach((v, i) => {
-        const x = padding + (i / (valueData.length - 1)) * (c.width - padding * 2);
-        const y = c.height - padding - (v / max) * (c.height - padding * 2);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        ctx.fillStyle = "#38a169";
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fill();
-        points.push({x, y, value: v, label: (i+1)+"年 資產"});
-      });
-      ctx.strokeStyle = "#38a169";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      ctx.beginPath();
-      investedData.forEach((v, i) => {
-        const x = padding + (i / (investedData.length - 1)) * (c.width - padding * 2);
-        const y = c.height - padding - (v / max) * (c.height - padding * 2);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        ctx.fillStyle = "#b7791f";
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fill();
-        points.push({x, y, value: v, label: (i+1)+"年 投入"});
-      });
-      ctx.strokeStyle = "#b7791f";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      c.onmousemove = function(e) {
-        const rect = c.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        const tooltip = document.getElementById("tooltip");
-        let found = false;
-
-        for (const p of points) {
-          const dx = mouseX - p.x;
-          const dy = mouseY - p.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < 10) {
-            tooltip.style.left = `${e.pageX + 12}px`;
-            tooltip.style.top = `${e.pageY - 32}px`;
-            tooltip.innerHTML = `${p.label}<br><strong>NT$ ${p.value.toLocaleString()}</strong>`;
-            tooltip.classList.add("show");
-            found = true;
-            break;
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: '資產成長',
+              data: valueData,
+              borderColor: '#38a169',
+              backgroundColor: 'rgba(56,161,105,0.2)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4
+            },
+            {
+              label: '總投入',
+              data: investedData,
+              borderColor: '#b7791f',
+              backgroundColor: 'rgba(183,121,31,0.2)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: NT$ ${context.parsed.y.toLocaleString()}`;
+                }
+              }
+            },
+            legend: {
+              labels: {
+                color: getComputedStyle(document.body).color
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return 'NT$ ' + value.toLocaleString();
+                },
+                color: getComputedStyle(document.body).color
+              },
+              grid: {
+                color: 'rgba(200,200,200,0.2)'
+              }
+            },
+            x: {
+              ticks: {
+                color: getComputedStyle(document.body).color
+              },
+              grid: {
+                color: 'rgba(200,200,200,0.1)'
+              }
+            }
           }
         }
-
-        if (!found) {
-          tooltip.classList.remove("show");
-        }
-      };
+      });
     }
 
     function openYahoo() {
@@ -188,7 +166,7 @@
         alert("請輸入股票代碼！");
         return;
       }
-           const url = `https://tw.stock.yahoo.com/quote/${code}.TW`;
+      const url = `https://tw.stock.yahoo.com/quote/${code}.TW`;
       window.open(url, "_blank");
     }
 
@@ -207,6 +185,12 @@
 
     function toggleDarkMode() {
       document.body.classList.toggle("dark-mode");
+      if (chart) chart.options.plugins.legend.labels.color = getComputedStyle(document.body).color;
+      if (chart) {
+        chart.options.scales.x.ticks.color = getComputedStyle(document.body).color;
+        chart.options.scales.y.ticks.color = getComputedStyle(document.body).color;
+        chart.update();
+      }
     }
   </script>
 </body>
