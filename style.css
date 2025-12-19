@@ -200,3 +200,59 @@ footer {
 .hot-stocks button:hover {
   background: #48bb78;
 }
+
+/* 📱 手機版響應式設計 */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+  }
+
+  .nav-links {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .nav-links a {
+    margin-left: 0;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+  }
+
+  .container,
+  .stock-link,
+  .download {
+    margin: 24px 16px;
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  input,
+  button {
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  canvas {
+    height: 240px;
+  }
+
+  .hot-stocks {
+    flex-direction: column;
+  }
+
+  .hot-stocks button {
+    width: 100%;
+  }
+}
