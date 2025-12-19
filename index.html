@@ -1,93 +1,87 @@
 <!DOCTYPE html>
-<input id="monthly" type="number" value="10000" />
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ETF 定期定額複利試算</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background:#f5f7fa; }
+    .container { max-width: 720px; margin: 40px auto; background:#fff; padding:24px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,.08); }
+    h1 { font-size: 24px; }
+    label { display:block; margin-top:12px; font-weight:600; }
+    input { width:100%; padding:10px; margin-top:6px; border-radius:8px; border:1px solid #ccc; }
+    button { margin-top:20px; padding:12px; width:100%; border:none; border-radius:10px; background:#2563eb; color:#fff; font-size:16px; cursor:pointer; }
+    canvas { margin-top:20px; width:100%; height:200px; }
+    .result { margin-top:20px; background:#f1f5f9; padding:16px; border-radius:10px; }
+    footer { margin-top:24px; text-align:center; font-size:12px; color:#64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ETF 定期定額複利試算</h1>
 
+    <label>每月投入金額（NTD）</label>
+    <input id="monthly" type="number" value="10000">
 
-<label>年化報酬率（%）</label>
-<input id="rate" type="number" value="6" />
+    <label>年化報酬率（%）</label>
+    <input id="rate" type="number" value="6">
 
+    <label>投資年數</label>
+    <input id="years" type="number" value="20">
 
-<label>投資年數</label>
-<input id="years" type="number" value="20" />
+    <button onclick="calculate()">開始試算</button>
 
+    <canvas id="chart" width="600" height="200"></canvas>
 
-<button onclick="calculate()">開始試算</button>
+    <div class="result" id="result"></div>
 
+    <footer>※ 本試算僅為數學模擬，非投資建議</footer>
+  </div>
 
-<canvas id="chart" height="200" style="margin-top:20px;"></canvas>
-<div class="result" id="result"></div>
+  <script>
+    function calculate() {
+      const monthly = Number(document.getElementById('monthly').value);
+      const rate = Number(document.getElementById('rate').value) / 100 / 12;
+      const years = Number(document.getElementById('years').value);
+      const months = years * 12;
 
+      let value = 0;
+      const yearly = [];
 
-<footer>
-※ 本試算僅為數學模擬，非投資建議
-</footer>
-</div>
+      for (let i = 1; i <= months; i++) {
+        value = (value + monthly) * (1 + rate);
+        if (i % 12 === 0) yearly.push(Math.round(value));
+      }
 
+      const invested = monthly * months;
 
-<script>
-function calculate() {
-const monthly = Number(document.getElementById('monthly').value);
-const rate = Number(document.getElementById('rate').value) / 100 / 12;
-const years = Number(document.getElementById('years').value);
-const months = years * 12;
+      document.getElementById('result').innerHTML = `
+        <p><strong>總投入：</strong> NT$ ${invested.toLocaleString()}</p>
+        <p><strong>最終資產：</strong> NT$ ${Math.round(value).toLocaleString()}</p>
+        <p><strong>投資收益：</strong> NT$ ${Math.round(value - invested).toLocaleString()}</p>
+      `;
 
+      drawChart(yearly);
+    }
 
-let futureValue = 0;
-const data = [];
-for (let i = 0; i < months; i++) {
-futureValue = (futureValue + monthly) * (1 + rate);
-if ((i + 1) % 12 === 0) {
-data.push(Math.round(futureValue));
-}
-}
+    function drawChart(data) {
+      const c = document.getElementById('chart');
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, c.width, c.height);
 
+      const max = Math.max(...data);
+      const padding = 30;
 
-const totalInvested = monthly * months;
-
-
-document.getElementById('result').innerHTML = `
-<p><strong>總投入金額：</strong> NT$ ${totalInvested.toLocaleString()}</p>
-<p><strong>最終資產預估：</strong> NT$ ${Math.round(futureValue).toLocaleString()}</p>
-<p><strong>投資收益：</strong> NT$ ${Math.round(futureValue - totalInvested).toLocaleString()}</p>
-`;
-
-
-drawChart(data);
-}
-
-
-function drawChart(data) {
-const canvas = document.getElementById('chart');
-const ctx = canvas.getContext('2d');
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-
-const max = Math.max(...data);
-const padding = 30;
-const w = canvas.width - padding * 2;
-const h = canvas.height - padding * 2;
-
-
-ctx.beginPath();
-data.forEach((value, index) => {
-const x = padding + (w / (data.length - 1)) * index;
-const y = padding + h - (value / max) * h;
-index === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-});
-ctx.strokeStyle = '#2563eb';
-ctx.lineWidth = 2;
-ctx.stroke();
-}
-
-
-const totalInvested = monthly * months;
-
-
-document.getElementById('result').innerHTML = `
-<p><strong>總投入金額：</strong> NT$ ${totalInvested.toLocaleString()}</p>
-<p><strong>最終資產預估：</strong> NT$ ${Math.round(futureValue).toLocaleString()}</p>
-<p><strong>投資收益：</strong> NT$ ${Math.round(futureValue - totalInvested).toLocaleString()}</p>
-`;
-}
-</script>
+      ctx.beginPath();
+      data.forEach((v, i) => {
+        const x = padding + (i / (data.length - 1)) * (c.width - padding * 2);
+        const y = c.height - padding - (v / max) * (c.height - padding * 2);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = '#2563eb';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  </script>
 </body>
 </html>
