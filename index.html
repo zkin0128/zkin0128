@@ -23,6 +23,8 @@
 
     <!-- 圖表區塊 -->
     <canvas id="chart" width="600" height="300"></canvas>
+    <!-- tooltip -->
+    <div id="tooltip" class="tooltip"></div>
 
     <div class="result" id="result"></div>
 
@@ -30,6 +32,8 @@
   </div>
 
   <script>
+    let points = []; // 儲存折線上的點位置與數值
+
     function calculate() {
       const monthly = Number(document.getElementById('monthly').value);
       const rate = Number(document.getElementById('rate').value) / 100 / 12;
@@ -42,11 +46,15 @@
 
       const months = years * 12;
       let value = 0;
-      const yearly = [];
+      const yearlyValue = [];
+      const yearlyInvested = [];
 
       for (let i = 1; i <= months; i++) {
         value = (value + monthly) * (1 + rate);
-        if (i % 12 === 0) yearly.push(Math.round(value));
+        if (i % 12 === 0) {
+          yearlyValue.push(Math.round(value));
+          yearlyInvested.push(monthly * i);
+        }
       }
 
       const invested = monthly * months;
@@ -57,16 +65,17 @@
         <p><strong>投資收益：</strong> NT$ ${Math.round(value - invested).toLocaleString()}</p>
       `;
 
-      drawChart(yearly);
+      drawChart(yearlyValue, yearlyInvested);
     }
 
-    function drawChart(data) {
+    function drawChart(valueData, investedData) {
       const c = document.getElementById('chart');
       const ctx = c.getContext('2d');
       ctx.clearRect(0, 0, c.width, c.height);
+      points = []; // 清空舊點
 
-      const max = Math.max(...data);
-      const padding = 40;
+      const max = Math.max(...valueData, ...investedData);
+      const padding = 50;
 
       // 畫座標軸
       ctx.strokeStyle = "#94a3b8";
@@ -77,35 +86,92 @@
       ctx.lineTo(c.width - padding, c.height - padding);
       ctx.stroke();
 
-      // 畫折線 + 圓點
+      // Y 軸刻度
+      ctx.fillStyle = "#475569";
+      ctx.font = "12px Arial";
+      const steps = 5;
+      for (let i = 0; i <= steps; i++) {
+        const value = Math.round(max * i / steps);
+        const y = c.height - padding - (i / steps) * (c.height - padding * 2);
+        ctx.fillText("NT$ " + value.toLocaleString(), 5, y + 4);
+        ctx.beginPath();
+        ctx.moveTo(padding - 5, y);
+        ctx.lineTo(c.width - padding, y);
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.stroke();
+      }
+
+      // X 軸刻度
+      const years = valueData.length;
+      for (let i = 0; i < years; i++) {
+        const x = padding + (i / (years - 1)) * (c.width - padding * 2);
+        const y = c.height - padding;
+        ctx.fillText((i + 1) + "年", x - 10, y + 20);
+      }
+
+      // 畫資產成長折線
       ctx.beginPath();
-      data.forEach((v, i) => {
-        const x = padding + (i / (data.length - 1)) * (c.width - padding * 2);
+      valueData.forEach((v, i) => {
+        const x = padding + (i / (valueData.length - 1)) * (c.width - padding * 2);
         const y = c.height - padding - (v / max) * (c.height - padding * 2);
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-        // 畫圓點
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         ctx.fillStyle = "#2563eb";
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, Math.PI * 2);
         ctx.fill();
+        points.push({x, y, value: v, label: (i+1)+"年 資產"});
       });
       ctx.strokeStyle = "#2563eb";
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // 漸層填充區域
-      const gradient = ctx.createLinearGradient(0, padding, 0, c.height - padding);
-      gradient.addColorStop(0, "rgba(37,99,235,0.3)");
-      gradient.addColorStop(1, "rgba(37,99,235,0)");
-      ctx.fillStyle = gradient;
-      ctx.lineTo(c.width - padding, c.height - padding);
-      ctx.lineTo(padding, c.height - padding);
-      ctx.closePath();
-      ctx.fill();
+      // 畫投入金額折線
+      ctx.beginPath();
+      investedData.forEach((v, i) => {
+        const x = padding + (i / (investedData.length - 1)) * (c.width - padding * 2);
+        const y = c.height - padding - (v / max) * (c.height - padding * 2);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        ctx.fillStyle = "#f97316";
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        points.push({x, y, value: v, label: (i+1)+"年 投入"});
+      });
+      ctx.strokeStyle = "#f97316";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 圖例
+      ctx.fillStyle = "#2563eb";
+      ctx.fillRect(c.width - 120, padding, 12, 12);
+      ctx.fillStyle = "#000";
+      ctx.fillText("資產成長", c.width - 100, padding + 10);
+
+      ctx.fillStyle = "#f97316";
+      ctx.fillRect(c.width - 120, padding + 20, 12, 12);
+      ctx.fillStyle = "#000";
+      ctx.fillText("總投入", c.width - 100, padding + 30);
+
+      // 滑鼠事件
+      c.onmousemove = function(e) {
+        const rect = c.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const tooltip = document.getElementById("tooltip");
+        let found = false;
+        points.forEach(p => {
+          if (Math.abs(mouseX - p.x) < 6 && Math.abs(mouseY - p.y) < 6) {
+            tooltip.style.left = (e.clientX + 10) + "px";
+            tooltip.style.top = (e.clientY - 20) + "px";
+            tooltip.innerHTML = p.label + ": NT$ " + p.value.toLocaleString();
+            tooltip.style.display = "block";
+            found = true;
+          }
+        });
+        if (!found) {
+          tooltip.style.display = "none";
+        }
+      };
     }
   </script>
 </body>
